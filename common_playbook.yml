@@ -1,5 +1,18 @@
 ---
 - hosts: all
+  remote_user: root   # User to log into to run the playbook tasks
+  vars:
+    NORMAL_USER_NAME: "ansible"
+  tasks:
+    - name: "Create a secondary, non-root user"
+      user:
+        name: "{{ NORMAL_USER_NAME }}"
+        password: "$6$Yncz4m42B2o9IDWO$Lsi4LWSi3OnvEmp92gVmwKquey4WuYnB./8SwsN7uxhpFh2OKVA7rJWtdf/hsbvkZxUIKc.ev6xpZAd9OiSNU."
+        group: root
+        create_home: "no"
+        shell: /bin/bash
+
+- hosts: all
   tasks:
     - name: Install htop
       package:
