@@ -2,7 +2,7 @@
 
 Little repo to host ansible config about my homelab's rapberry-pi clusters and laptop
 
-# Before start
+## Before start
 
 All targets host must have the ansible SSH keys to allow Ansible to easily connect without password 
 To generate the SSH keys (this has to be done only once, if the file already exists, retrieve it):
@@ -23,3 +23,8 @@ To  run the playbook, use the following command:
 ``` bash
 ansible-playbook common_playbook.yml --u root  --private-key=$HOME/.ssh/ansible.id_ed25519 -i ./hosts
 ```
+
+## Docs
+
+THere is folder `docs` with all necessary information and usefull commands to use
+
