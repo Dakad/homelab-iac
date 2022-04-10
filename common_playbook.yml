@@ -34,3 +34,18 @@
         name: htop
         state: latest
 
+- hosts: all
+  become: true
+  remote_user: dietpi   # User to log into to run the playbook tasks
+  # become_user: ansible
+  tasks:
+    - name: Update cache & Upgrade all packages
+      register: update_sys
+      apt:
+        update_cache: true
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+    - name: Display the last line of the previous task to check the stats
+      debug:
+        msg:  "{{update_sys.stdout_lines|last}}"
