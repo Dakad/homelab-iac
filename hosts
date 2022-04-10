@@ -10,8 +10,9 @@ raspshiva.home
 
 
 [laptops]
-rog-zephyrus.home
 asus-rog-flow13.home
+rog-zephyrus.home
+switch-alpha.home
 
 
 [rpis:children]

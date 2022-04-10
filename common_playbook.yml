@@ -1,6 +1,7 @@
 ---
 - hosts: all
-  remote_user: root   # User to log into to run the playbook tasks
+  # become: true
+  remote_user: dietpi   # User to log into to run the playbook tasks
   vars:
     NORMAL_USER_NAME: "ansible"
   tasks:
@@ -25,6 +26,8 @@
         key: "{{ lookup('file', './files/ansible.id_ed25519.pub') }}"
 
 - hosts: all
+  become: true
+  become_user: ansible
   tasks:
     - name: Install htop
       package:

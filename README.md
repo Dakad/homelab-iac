@@ -15,13 +15,14 @@ Now, we need to send the ssh to the target hosts using ``ssh-copy-id``, repeat t
 For instance, to send to raspodin
 
 ``` bash
+# Dietpi will be used as become user for rpi and pihole (user of reference if needed intead of root)
 ssh-copy-id -p 22 -i ~/.ssh/ansible.id_ed25519 dietpi@raspodin.home
 ```
 
 To  run the playbook, use the following command:
 
 ``` bash
-ansible-playbook common_playbook.yml --u root  --private-key=$HOME/.ssh/ansible.id_ed25519 -i ./hosts
+ansible-playbook common_playbook.yml --u dietpi  --private-key=$HOME/.ssh/ansible.id_ed25519 -i ./hosts
 ```
 
 ## Docs
