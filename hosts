@@ -1,16 +1,20 @@
 [pihole]
 raspihole.home
 
+[raspodin]
+raspodin.home    ansible_port=8022
 
-#[raspodin]
-#raspodin.home
-
-
-#[clusters]
-#rasphermes.home
-#raspshiva.home
+[rpi-clusters]
+rasphermes.home
+raspshiva.home
 
 
-#[laptops]
-#rog-zephyrus.home
-#asus-rog-flow13.home
+[laptops]
+rog-zephyrus.home
+asus-rog-flow13.home
+
+
+[rpis:children]
+pihole
+raspodin
+rpi-clusters
