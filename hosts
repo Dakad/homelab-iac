@@ -1,6 +1,16 @@
 [pihole]
 raspihole.home
 
+
 #[raspodin]
 #raspodin.home
 
+
+#[clusters]
+#rasphermes.home
+#raspshiva.home
+
+
+#[laptops]
+#rog-zephyrus.home
+#asus-rog-flow13.home
