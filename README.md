@@ -1,4 +1,4 @@
-# HomeLab IAAC with Ansible
+# HomeLab IAC with Ansible
 
 Little repo to host ansible config about my homelab's rapberry-pi clusters and laptop
 

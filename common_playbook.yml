@@ -22,7 +22,7 @@
     - name: Add authorized key to user ({{ NORMAL_USER_NAME }}) 
       authorized_key:
         user: "{{ NORMAL_USER_NAME }}"
-        key: "{{ lookup('file', '~/.ssh/ansible.id_ed25519.pub') }}"
+        key: "{{ lookup('file', './files/ansible.id_ed25519.pub') }}"
 
 - hosts: all
   tasks:
