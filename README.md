@@ -18,3 +18,8 @@ For instance, to send to raspodin
 ssh-copy-id -p 22 -i ~/.ssh/ansible.id_ed25519 dietpi@raspodin.home
 ```
 
+To  run the playbook, use the following command:
+
+``` bash
+ansible-playbook common_playbook.yml --u root  --private-key=$HOME/.ssh/ansible.id_ed25519 -i ./hosts
+```
