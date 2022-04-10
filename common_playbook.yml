@@ -7,10 +7,22 @@
     - name: "Create a secondary, non-root user"
       user:
         name: "{{ NORMAL_USER_NAME }}"
+        # Password hash generated on https://www.mkpasswd.net/index.php using sha-512 and Category: sha
         password: "$6$Yncz4m42B2o9IDWO$Lsi4LWSi3OnvEmp92gVmwKquey4WuYnB./8SwsN7uxhpFh2OKVA7rJWtdf/hsbvkZxUIKc.ev6xpZAd9OiSNU."
         group: root
-        create_home: "no"
+        # create_home: "no"
         shell: /bin/bash
+    - name: "Add user ({{ NORMAL_USER_NAME }}) to sudoers"
+      lineinfile:
+        dest: /etc/sudoers
+        regexp: "{{ NORMAL_USER_NAME }} ALL"
+        line: "{{ NORMAL_USER_NAME }} ALL=(ALL) ALL"
+        state: present
+
+    - name: Add authorized key to user ({{ NORMAL_USER_NAME }}) 
+      authorized_key:
+        user: "{{ NORMAL_USER_NAME }}"
+        key: "{{ lookup('file', '~/.ssh/ansible.id_ed25519.pub') }}"
 
 - hosts: all
   tasks:
