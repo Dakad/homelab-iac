@@ -1,18 +1,24 @@
 ---
 - hosts: all
-  # become: true
+  become: true
   remote_user: dietpi   # User to log into to run the playbook tasks
-  tags: bootstrap
+  tags: boot
   vars:
     NORMAL_USER_NAME: "ansible"
   tasks:
     - name: "Create a secondary, non-root user"
-      user:
+      ansible.builtin.user:
         name: "{{ NORMAL_USER_NAME }}"
+        comment: ''
         # Password hash generated on https://www.mkpasswd.net/index.php using sha-512 and Category: sha
         password: "$6$Yncz4m42B2o9IDWO$Lsi4LWSi3OnvEmp92gVmwKquey4WuYnB./8SwsN7uxhpFh2OKVA7rJWtdf/hsbvkZxUIKc.ev6xpZAd9OiSNU."
-        group: root
-        # create_home: "no"
+        groups:
+          - sudo
+          - root
+        generate_ssh_key: yes
+        ssh_key_bits: 4096
+        ssh_key_type: ed25519
+        create_home: "no"
         shell: /bin/bash
     - name: "Add user ({{ NORMAL_USER_NAME }}) to sudoers"
       lineinfile:
