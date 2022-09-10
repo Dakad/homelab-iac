@@ -4,18 +4,31 @@ raspihole.home
 [raspodin]
 raspodin.home    ansible_port=8022
 
-[rpi-clusters]
-rasphermes.home
-raspshiva.home
+[laptops]
+# asus-rog-flow13.home
+# rog-zephyrus.home
+# switch-alpha.home
 
+[rpi_kube_control]
+rasphermes.local  ansible_connection=ssh
 
-#[laptops]
-#asus-rog-flow13.home
-#rog-zephyrus.home
-#switch-alpha.home
+[rpi_kube_workers]
+raspworker[10:11].local  ansible_connection=ssh
+raspworker[20:21].local  ansible_connection=ssh
+# raspworker[30:34].local  ansible_connection=ssh
+# raspworker[40:44].local  ansible_connection=ssh
+# raspworker[50:54].local  ansible_connection=ssh
+
+[rpi_kube:children]
+rpi_kube_control
+rpi_kube_workers
 
 
 [rpis:children]
 pihole
 raspodin
-rpi-clusters
+rpi_kube
+
+[all:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+ansible_user=dietpi
