@@ -9,10 +9,10 @@ rasphermes.home
 raspshiva.home
 
 
-[laptops]
-asus-rog-flow13.home
-rog-zephyrus.home
-switch-alpha.home
+#[laptops]
+#asus-rog-flow13.home
+#rog-zephyrus.home
+#switch-alpha.home
 
 
 [rpis:children]

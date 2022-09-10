@@ -2,7 +2,6 @@
 
 Here is little doc about usefull Ansible ad-hoc command to use
 
-
 To list all registred hosts, `ansible all --list-hosts` or 
 ``` bash 
 ansible-inventory --list 
