@@ -1,12 +1,12 @@
 ---
 - hosts: all
-  become: true
-  remote_user: dietpi   # User to log into to run the playbook tasks
+  become: true          # Run as become_user (root)
+  remote_user: dietpi   # User to ssh log into to run the playbook tasks
   tags: boot
   vars:
     NORMAL_USER_NAME: "ansible"
   tasks:
-    - name: "Create a secondary, non-root user"
+    - name: "Create a secondary, non-root user '{{ NORMAL_USER_NAME }}'"
       ansible.builtin.user:
         name: "{{ NORMAL_USER_NAME }}"
         comment: ''
@@ -26,25 +26,17 @@
         regexp: "{{ NORMAL_USER_NAME }} ALL"
         line: "{{ NORMAL_USER_NAME }} ALL=(ALL) ALL"
         state: present
+        validate: 'visudo -cf %s'
 
-    - name: Add authorized key to user ({{ NORMAL_USER_NAME }}) 
+    - name: Add authorized key to user ({{ NORMAL_USER_NAME }})
       authorized_key:
         user: "{{ NORMAL_USER_NAME }}"
         key: "{{ lookup('file', './files/ansible.id_ed25519.pub') }}"
 
 - hosts: all
-  # become: true
-  # become_user: ansible
-  tags: apt,pkg
-  tasks:
-    - name: Install htop
-      package:
-        name: htop
-        state: latest
-
-- hosts: all
+  remote_user: ansible
   become: true
-  become_user: ansible
+  become_user: root
   tags: always
   tasks:
     - name: Update cache & Upgrade all packages
@@ -57,3 +49,9 @@
     - name: Display the last line of the previous task to check the stats
       debug:
         msg:  "{{update_sys.stdout_lines|last}}"
+    - name: Install required packages depencies
+      package:
+        name:
+          - acl
+        state: latest
+
