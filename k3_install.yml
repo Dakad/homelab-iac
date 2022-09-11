@@ -1,0 +1,87 @@
+---
+- hosts: rpi_kube
+  become: true          # Run as become_user (root)
+  remote_user: ansible  # User to ssh log into to run the playbook tasks
+  tags: k3s_download, k3s_setup, kube_control, kube_master, kube_worker 
+  vars:
+    GET_K3S_SCRIPT_URL: "https://get.k3s.io"
+  tasks:
+    - name: Download k3s script
+      ansible.builtin.get_url: 
+        url: "{{ GET_K3S_SCRIPT_URL }}"
+        dest: /usr/local/bin/k3s-install.sh
+        owner: ansible
+        group: ansible
+        mode: 0755
+
+# Kube Control plane
+- hosts: rpi_kube_control
+  become: true          # Run as become_user (root)
+  remote_user: ansible   # User to ssh log into to run the playbook tasks
+  tags: k3s_setup, kube_control, kube_master
+  timeout: 120          # in seconds
+  vars:
+    TOKEN: "{{ lookup('ansible.builtin.password', '/dev/null length=48', seed=inventory_hostname) }}"
+  tasks:
+    - name: Install k3s Server
+      environment:
+        # INSTALL_K3S_VERSION: "v1.23.6+k3s1"
+        # ## This is the mode that we want to use for the kubeconfig file
+        # K3S_KUBECONFIG_MODE: 644
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s-install.sh
+          - --
+          # This is the mode that we want to use for the kubeconfig file
+          # It can also be passed as env var K3S_KUBECONFIG_MODE 
+          - --write-kubeconfig-mode 644
+
+          # This is the flag that we want to use to disable the service load balancer
+          - --disable servicelb
+          # flag that we want to use to disable the K3s local storage
+          - --disable local-storage
+
+          # token that we want to use to connect to the K3s master node
+          - "--token {{ TOKEN | quote }}"
+
+          # We want to use to add a taint to the K3s master node
+          - --node-taint CriticalAddonsOnly=true:NoExecute
+
+          # We want to use to bind the K3s master node to a specific IP address
+          # - --bind-address {{ ansible_ssh_host | quote }}
+          - --bind-address 192.168.0.210
+
+          # We want to use to disable the K3s cloud controller
+          - --disable-cloud-controller
+
+    - name: Ensure k3s server is running
+      ansible.builtin.service:
+        name: k3s
+        state: started
+        enabled: yes
+
+
+# Kube Worker plane
+- hosts: rpi_kube_workers
+  become: true          # Run as become_user (root)
+  remote_user: ansible   # User to ssh log into to run the playbook tasks
+  tags: k3s_setup, kube_worker
+  timeout: 120          # in seconds
+  vars:
+    KUBE_CONTROL_HOSTNAME: "{{ hostvars[inventory_hostname]['groups']['rpi_kube_control'][0] }}"
+  tasks:
+    - name: Install k3s Agent
+      environment:
+        K3S_URL: "https://192.168.0.210:6443"
+        # K3S_URL: "https://{{ hostvars[KUBE_CONTROL_HOSTNAME]['inventory_hostname'] }}:6443"
+        K3S_TOKEN: "{{ lookup('ansible.builtin.password', '/dev/null length=48', seed=KUBE_CONTROL_HOSTNAME) }}"
+      ansible.builtin.command:
+        argv: 
+          - /usr/local/bin/k3s-install.sh
+
+    - name: Ensure k3s server is running
+      ansible.builtin.service:
+        name: k3s-agent
+        state: started
+        enabled: yes
+
