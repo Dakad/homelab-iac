@@ -37,7 +37,7 @@
   remote_user: ansible
   become: true
   become_user: root
-  tags: always
+  tags: always, apt, pkg
   tasks:
     - name: Update cache & Upgrade all packages
       register: update_sys
@@ -53,5 +53,6 @@
       package:
         name:
           - acl
+          - iptables
         state: latest
 
