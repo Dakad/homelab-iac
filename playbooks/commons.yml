@@ -54,5 +54,8 @@
         name:
           - acl
           - iptables
+          - libnss-mdns 
+          - avahi-discover 
+          - avahi-utils
         state: latest
 
