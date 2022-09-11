@@ -2,12 +2,12 @@
 - hosts: rpi_kube
   become: true          # Run as become_user (root)
   remote_user: ansible  # User to ssh log into to run the playbook tasks
-  tags: k3s_download, k3s_setup, kube_control, kube_master, kube_worker 
+  tags: k3s_download, k3s_setup, kube_control, kube_master, kube_worker
   vars:
     GET_K3S_SCRIPT_URL: "https://get.k3s.io"
   tasks:
     - name: Download k3s script
-      ansible.builtin.get_url: 
+      ansible.builtin.get_url:
         url: "{{ GET_K3S_SCRIPT_URL }}"
         dest: /usr/local/bin/k3s-install.sh
         owner: ansible
@@ -21,6 +21,7 @@
   tags: k3s_setup, kube_control, kube_master
   timeout: 120          # in seconds
   vars:
+    # With seed arg, the random generated password is idempotent for the same hostname
     TOKEN: "{{ lookup('ansible.builtin.password', '/dev/null length=48', seed=inventory_hostname) }}"
   tasks:
     - name: Install k3s Server
@@ -72,11 +73,12 @@
   tasks:
     - name: Install k3s Agent
       environment:
+        # TODO: Find a way to replace the IP by the kube_control's hostname
         K3S_URL: "https://192.168.0.210:6443"
         # K3S_URL: "https://{{ hostvars[KUBE_CONTROL_HOSTNAME]['inventory_hostname'] }}:6443"
         K3S_TOKEN: "{{ lookup('ansible.builtin.password', '/dev/null length=48', seed=KUBE_CONTROL_HOSTNAME) }}"
       ansible.builtin.command:
-        argv: 
+        argv:
           - /usr/local/bin/k3s-install.sh
 
     - name: Ensure k3s server is running

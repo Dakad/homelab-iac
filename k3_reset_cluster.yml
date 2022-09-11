@@ -1,0 +1,40 @@
+---
+- hosts: rpi_kube
+  become: true          # Run as become_user (root)
+  remote_user: ansible  # User to ssh log into to run the playbook tasks
+  tags: k3s_reset, kube_control, kube_master, kube_worker
+  timeout: 120          # in seconds
+  tasks:
+    - name: Run k3s-killall.sh
+      ansible.builtin.command: /usr/local/bin/k3s-killall.sh
+
+    - name: Ensure k3s server is stopped
+      ansible.builtin.service:
+        name: k3s
+        state: stopped
+        enabled: no
+      when: inventory_hostname in groups['rpi_kube_control']
+
+    - name: Ensure k3s-agent is stopped
+      ansible.builtin.service:
+        name: k3s-agent
+        state: started
+        enabled: yes
+      when: inventory_hostname in groups['rpi_kube_workers']
+
+    - name: Run k3s-uninstall.sh
+      ansible.builtin.command: /usr/local/bin/k3s-uninstall.sh
+
+    - name: Ensure kubectl command is removed
+      ansible.builtin.shell: test kubectl
+      failed_when: False
+      when: inventory_hostname in groups['rpi_kube_control']
+
+    - name: Ensure k3s command is removed
+      ansible.builtin.shell: test k3s
+      failed_when: False
+      # when: inventory_hostname in groups['rpi_kube_control']
+
+- name: Run k3s_install playbook
+  ansible.builtin.import_playbook: k3s_install.yml
+
