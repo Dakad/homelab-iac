@@ -1,0 +1,27 @@
+---
+- name: Install hostname packages
+  package:
+    name: dbus
+    state: present
+
+- name: Start service dbus, if not started
+  ansible.builtin.service:
+    name: dbus
+    state: started
+
+
+- name: Current hostname set setname value
+  action: command hostname {{setname}}
+
+# # OR, use the built hostname
+# - name: Set name of host
+#   ansible.builtin.hostname:
+#     name: "{{ inventory_hostname }}"
+
+- name: re-gather facts to update ansible_hostname
+  when: not ansible_hostname == "{{ setname }}"
+  action: setup
+
+- name: Update /etc/hosts to reflects same value
+  action: lineinfile dest=/etc/hosts regexp=^{{ansible_eth0.ipv4.address}} line="{{ansible_eth0.ipv4.address}}  {{setname}}"
+

@@ -1,0 +1,52 @@
+---
+- name: Download k3s script
+  become: true          # Run as become_user (root)
+  tags: k3s_download, k3s_setup, kube_control, kube_master, kube_worker
+  remote_user: ansible  # User to ssh log into to run the playbook tasks
+  ansible.builtin.get_url:
+    url: "{{ GET_K3S_SCRIPT_URL }}"
+    dest: /usr/local/bin/k3s-install.sh
+    owner: ansible
+    group: ansible
+    mode: 0755
+
+## OR
+
+# - hosts: rpi_kube
+#   remote_user: dietpi   # User to ssh log into to run the playbook tasks
+#   tags: k3s_download, k3s_setup
+#   vars:
+#     INSTALL_K3S_CHANNEL_URL: "https://update.k3s.io/v1-release/channels/stable"
+#   tasks:
+#     - name: Retrieve latest stabe version on k3s
+#       ansible.builtin.shell: curl -w '%{url_effective}' -L -s -S {{ INSTALL_K3S_CHANNEL_URL|quote }} -o /dev/null | sed -e 's|.*/||'
+#       register: command_output
+
+#     - set_fact:
+#         K3S_LATEST_VERSION: "{{ command_output.stdout }}"
+
+#     - name: Download k3s binary arm64
+#       get_url:
+#         url: https://github.com/k3s-io/k3s/releases/download/{{ K3S_LATEST_VERSION }}/k3s-arm64
+#         checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ K3S_LATEST_VERSION }}/sha256sum-arm64.txt
+#         dest: /usr/local/bin/k3s
+#         owner: dietpi
+#         group: dietpi
+#         mode: 0755
+#       when:
+#         - ( ansible_facts.architecture is search("arm") and
+#             ansible_facts.userspace_bits == "64" ) or
+#             ansible_facts.architecture is search("aarch64")
+
+#     - name: Download k3s binary armhf
+#       get_url:
+#         url: https://github.com/k3s-io/k3s/releases/download/{{ K3S_LATEST_VERSION }}/k3s-armhf
+#         checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ K3S_LATEST_VERSION }}/sha256sum-arm.txt
+#         dest: /usr/local/bin/k3s
+#         owner: dietpi
+#         group: dietpi
+#         mode: 0755
+#       when:
+#         - ansible_facts.architecture is search("arm")
+#         - ansible_facts.userspace_bits == "32"
+

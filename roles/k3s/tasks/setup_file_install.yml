@@ -1,22 +1,6 @@
 ---
-# - hosts: rpi_kube
-#   become: true          # Run as become_user (root)
-#   remote_user: ansible  # User to ssh log into to run the playbook tasks
-#   tags: k3s_download, k3s_setup, kube_control, kube_master, kube_worker
-#   vars:
-#     GET_K3S_SCRIPT_URL: "https://get.k3s.io"
-#   tasks:
-#     - name: Download k3s script
-#       ansible.builtin.get_url:
-#         url: "{{ GET_K3S_SCRIPT_URL }}"
-#         dest: /usr/local/bin/k3s-install.sh
-#         owner: ansible
-#         group: ansible
-#         mode: 0755
-
 # Kube Control plane
-- hosts: rpi_kube_control
-  become: true          # Run as become_user (root)
+- become: true          # Run as become_user (root)
   remote_user: ansible   # User to ssh log into to run the playbook tasks
   tags: k3s_setup, kube_control, kube_master
   timeout: 120          # in seconds

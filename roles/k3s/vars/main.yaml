@@ -1,0 +1,7 @@
+---
+GET_K3S_SCRIPT_URL: "https://get.k3s.io"
+INSTALL_K3S_CHANNEL_URL: "https://update.k3s.io/v1-release/channels/stable"
+
+
+
+

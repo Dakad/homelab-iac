@@ -1,0 +1,7 @@
+---
+- name: re-gather data
+  action: setup
+
+- name: auto-generate cluster /etc/hosts
+  action: template src=hosts.j2 dest=/etc/hosts
+

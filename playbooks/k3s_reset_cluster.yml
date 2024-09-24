@@ -9,31 +9,31 @@
       ansible.builtin.command: /usr/local/bin/k3s-killall.sh
 
     - name: Ensure k3s server is stopped
+      when: inventory_hostname in groups['rpi_kube_control']
       ansible.builtin.service:
         name: k3s
         state: stopped
         enabled: no
-      when: inventory_hostname in groups['rpi_kube_control']
 
     - name: Ensure k3s-agent is stopped
+      when: inventory_hostname in groups['rpi_kube_workers']
       ansible.builtin.service:
         name: k3s-agent
         state: started
         enabled: yes
-      when: inventory_hostname in groups['rpi_kube_workers']
 
     - name: Run k3s-uninstall.sh
       ansible.builtin.command: /usr/local/bin/k3s-uninstall.sh
 
     - name: Ensure kubectl command is removed
+      when: inventory_hostname in groups['rpi_kube_control']
       ansible.builtin.shell: test kubectl
       failed_when: False
-      when: inventory_hostname in groups['rpi_kube_control']
 
     - name: Ensure k3s command is removed
+      # when: inventory_hostname in groups['rpi_kube_control']
       ansible.builtin.shell: test k3s
       failed_when: False
-      # when: inventory_hostname in groups['rpi_kube_control']
 
 - name: Run k3s_install playbook
   ansible.builtin.import_playbook: k3s_install.yml

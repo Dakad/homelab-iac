@@ -1,17 +1,10 @@
 ---
-- hosts: all
-  become: true          # Run as become_user (root)
-  remote_user: dietpi   # User to ssh log into to run the playbook tasks
-  tags: boot
-  vars:
-    NORMAL_USER_NAME: "ansible"
-  tasks:
-    - name: "Create a secondary, non-root user '{{ NORMAL_USER_NAME }}'"
+    - name: "Create a secondary, non-root user '{{ ansible_user.name }}'"
       ansible.builtin.user:
-        name: "{{ NORMAL_USER_NAME }}"
+        name: "{{ ansible_user.name }}"
         comment: ''
           # Password hash generated on https://www.mkpasswd.net/index.php?category=sha2 using type: sha-512 and Category: sha2
-        password: "$6$Yncz4m42B2o9IDWO$Lsi4LWSi3OnvEmp92gVmwKquey4WuYnB./8SwsN7uxhpFh2OKVA7rJWtdf/hsbvkZxUIKc.ev6xpZAd9OiSNU."
+        password: "{{ ansible_user.password_hash }}"
         groups:
           - sudo
           - root
@@ -20,17 +13,17 @@
         ssh_key_type: ed25519
         create_home: "no"
         shell: /bin/bash
-    - name: "Add user ({{ NORMAL_USER_NAME }}) to sudoers"
+    - name: "Add user ({{ ansible_user.name }}) to sudoers"
       lineinfile:
         dest: /etc/sudoers
-        regexp: "{{ NORMAL_USER_NAME }} ALL"
-        line: "{{ NORMAL_USER_NAME }} ALL=(ALL) ALL"
+        regexp: "{{ ansible_user.name }} ALL"
+        line: "{{ ansible_user.name }} ALL=(ALL) ALL"
         state: present
         validate: 'visudo -cf %s'
 
-    - name: Add authorized key to user ({{ NORMAL_USER_NAME }})
+    - name: Add authorized key to user ({{ ansible_user.name }})
       authorized_key:
-        user: "{{ NORMAL_USER_NAME }}"
+        user: "{{ ansible_user.name }}"
         key: "{{ lookup('file', './files/ansible.id_ed25519.pub') }}"
 
 - hosts: all
@@ -63,6 +56,7 @@
           - avahi-daemon
           - avahi-discover
           - avahi-utils
+          - lm-sensors
         state: latest
 
 - hosts: raspis

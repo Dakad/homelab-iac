@@ -1,0 +1,45 @@
+- name: Set Config
+  set_fact:
+    targetDir: /opt/pyfan
+
+- name: pyfan user
+  ansible.builtin.user:
+    name: pyfan
+    shell: /usr/sbin/nologin
+    groups: gpio
+
+- name: Python venv tools
+  ansible.builtin.package:
+    state: present
+    update_cache: yes
+    name:
+      - python3-pip
+      - python3-dev
+      - python-setuptools # Needed for ansible to switch to python3
+      - virtualenv
+
+- name: Clone py-fan git repository
+  ansible.builtin.git:
+    repo: https://github.com/sqlite/sqlite.git
+    depth: 1
+    clone: yes   # Will clone the even if it does exists locally
+    update: yes  # Will retrieve new version from origin repo
+    dest: "{{ targetDir }}"
+
+- name: Install PyFan app
+  ansible.builtin.pip:
+    name: "{{ targetDir }}/pyfan"
+    virtualenv: "{{ targetDir }}/venv"
+    virtualenv_python: python3.9
+
+- name: PyFan Systemd
+  ansible.builtin.copy:
+    remote_src: yes  # Only on the remove host
+    src: "{{ targetDir }}/systemd/pyfan.service"
+    dest: /etc/systemd/system/
+  notify: Restart PyFan
+
+- name: Make sure pyfan service is running
+  ansible.builtin.systemd:
+    name: pyfan
+    enabled: yes

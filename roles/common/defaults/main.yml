@@ -1,0 +1,16 @@
+---
+hosts_groupname: cluster
+
+# Cf TZ vales in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+time_zone:
+  utc: Etc/UTC
+  bxl: Europe/Brussels
+
+ansible_user:
+  name: "ansible"
+
+  # https://docs.ansible.com/ansible/latest/reference_appendices/faq.html#how-do-i-generate-crypted-passwords-for-the-user-module
+  # Password generated using the inventory hostname as salt
+  # ansible all -i localhost, -m debug -a "msg={{ 'super_secret_password' | password_hash('sha512', inventory_hostname) }}"
+  password: "$6$localhost$Z4kFbpKBqi10wcGmFFPeaQnsCu1AV1i562hzkRVHb/H1.RCrNIddzJXkCywmPwU/Q9HDZtQCrcnBMmN1br/mC0"
+
