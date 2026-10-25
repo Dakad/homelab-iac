@@ -13,13 +13,13 @@ To get all possible info about the hosts, usefull to know the IP address or the 
 ansible all -u ansible -m gather_facts | less
 
 # To get only a specific host
-ansible all -u ansible -m gather_facts --limit raspodin.home
+ansible all -u ansible -m gather_facts --limit rasphermes
 ```
 
 To quick exec a command on hosts
 
 ```bash
-ansible raspodin.home -u ansible -m shell -a "unamme -a"
+ansible rasphermes -u ansible -m shell -a "uname -a"
 ```
 
 To exec an elevated command (requiring sudo perm.):
@@ -30,7 +30,7 @@ To exec an elevated command (requiring sudo perm.):
 ansible all -u ansible -m apt -a update_cache=true --become
 
 ## Or sudo apt update && sudo apt install vim-nox
-ansible all -u ansible -m apt -a update_cache=true -a name=vim-nox --become --ask-become-pass
+ansible rasphermes -u ansible -m apt -a update_cache=true -a name=vim-nox --become --ask-become-pass
 
 ## Get the list of upgradable packages
 ansible all -u ansible -m shell -a "apt list --upgradable" -b -K

@@ -1,21 +1,11 @@
-[pihole]
-raspihole.home
-
-[raspodin]
-raspodin.home    ansible_port=8022
-
 [rpi-clusters]
 rasphermes.home
 raspshiva.home
 
 
 #[laptops]
-#asus-rog-flow13.home
-#rog-zephyrus.home
-#switch-alpha.home
+#asus-rog-flow14.home
 
 
 [rpis:children]
-pihole
-raspodin
 rpi-clusters
