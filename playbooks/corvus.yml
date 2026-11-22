@@ -1,0 +1,79 @@
+---
+# ============================================================================
+# Corvus (edge reverse proxy + WAF) on rasphermes, managed by Ansible.
+#
+# This playbook does NOT install the Corvus image or track it. Images move;
+# Ansible should manage the *declarative* bits (the compose file + the
+# persistent data volume) and let Docker pull/upgrade the image itself.
+#
+# Role in the network: rasphermes is the entrypoint + exitpoint. Corvus sits
+# on ports 80/443 and forwards to your services (by private IP) which may live
+# on other VLANs. It is plain HTTP forwarding for now — no Let's Encrypt, so
+# it never needs the DuckDNS token. See docs/edge-corvus.md.
+# ============================================================================
+
+- hosts: rasphermes
+  become: true
+  gather_facts: true
+  name: Install & manage Corvus edge proxy
+  tags:
+    - corvus
+    - edge
+    - proxy
+
+  vars:
+    # Where the compose file + data live, INSIDE the container's data dir.
+    # We write the file here and mount it read-write, then tell docker to use it.
+    CORVUS_COMPOSE_PATH: "/data/corvus/docker-compose.yml"
+    CORVUS_DATA_DIR:    "/data/corvus"
+    # Public address advertised to the admin console (for its own cert, if enabled).
+    CORVUS_ADMIN_HOST:  "corvus.rasphermes.home"
+
+  tasks:
+    # ---------------------------------------------------------------------
+    # 1. Persistent data volume. The container runs as uid 10001, so chown it.
+    #    We only create the dir + ownership — we never touch the image.
+    # ---------------------------------------------------------------------
+    - name: Ensure the Corvus data directory exists (owned by the container user)
+      file:
+        path: "{{ CORVUS_DATA_DIR }}"
+        state: directory
+        owner: "10001"
+        group: "10001"
+        mode: "0755"
+
+    # ---------------------------------------------------------------------
+    # 2. The compose file. This is the declarative source of truth: what
+    #    services run, ports, networks, and env. Keep it under files/ so it is
+    #    version controlled; Ansible copies it into the container each run.
+    # ---------------------------------------------------------------------
+    - name: Copy the Corvus docker-compose.yml into the container data dir
+      copy:
+        src: corvus/docker-compose.yml.j2
+        dest: "{{ CORVUS_COMPOSE_PATH }}"
+        owner: "10001"
+        group: "10001"
+        mode: "0644"
+
+    # ---------------------------------------------------------------------
+    # 3. Bring the service (re)up using the compose file we just wrote.
+    #    docker compose is the single interface we use, so upgrades just happen
+    #    when the image changes and someone runs this play again.
+    # ---------------------------------------------------------------------
+    - name: (Re)start Corvus with the updated compose file
+      docker_compose:
+        project_path: "{{ CORVUS_DATA_DIR }}"
+        command: restart
+        state: started
+        force_restart: false
+
+    # ---------------------------------------------------------------------
+    # 4. Sanity check: is Corvus answering on the admin console port (9443)?
+    # ---------------------------------------------------------------------
+    - name: Verify the Corvus admin console is reachable on :9443
+      wait_for:
+        host: 127.0.0.1
+        port: 9443
+        timeout: 120
+      register: corvus_up
+      until: corvus_up is succeeded

@@ -1,0 +1,35 @@
+# ============================================================================
+# Corvus edge proxy — compose file for rasphermes.
+#
+# This file lives in files/ (version controlled) and is copied into
+# /data/corvus on every ansible run. The container runs as uid/gid 10001 and
+# owns everything under ./data, so the volume is *not* owned by root.
+#
+# Plain HTTP forwarding for now (no TLS, no DuckDNS token). We forward by
+# private IP so Corvus on rasphermes can serve services on other VLANs.
+# See docs/edge-corvus.md for the network map and how to add a proxy host.
+# ============================================================================
+
+services:
+  corvus:
+    image: 'ghcr.io/corvus-gateway/corvus:latest'
+    restart: unless-stopped
+    # Run as the container's built-in user (10001) — matches the image's setup.
+    user: "10001:10001"
+    ports:
+      - "80:80"      # visitors -> gateway on HTTP
+      - "443:443"    # visitors -> gateway on HTTPS
+      - "9443:9443"  # admin console (unencrypted; firewall: LAN only)
+    environment:
+      # Names/IPs used to reach the admin console (and its cert, if ever enabled).
+      CORVUS_ADMIN_HOSTS: "{{ corvus_admin_hosts | default('rasphermes.home,192.168.1.100') }}"
+      # Forward-host DNS resolver. rasphermes runs Pi-hole on :53, so internal
+      # names resolve there. Leave default (Docker's resolver) if unsure.
+      CORVUS_RESOLVER: "127.0.0.1:53"
+      # Do NOT auto-check for updates — we manage upgrades via ansible/docker.
+      CORVUS_UPDATE_CHECK: "false"
+    volumes:
+      # Bind the compose file we copy in. The dir is chowned to 10001 by ansible.
+      - /data/corvus/docker-compose.yml:/docker-compose.yml:ro
+      # Persistent settings db, secrets, certs, logs, geoip, nginx versions.
+      - /data/corvus:/data
