@@ -1,8 +1,6 @@
 # Edge proxy & DuckDNS — what & why
 
-rasphermes is the entrypoint + exitpoint for the homelab. This doc explains
-**why** each piece exists and **how the moving parts fit**, so it's readable
-standalone.
+rasphermes is the entrypoint + exitpoint for the homelab. This doc explains **why** each piece exists and **how the moving parts fit**, so it's readable standalone.
 
 ## The network role of rasphermes
 
@@ -10,17 +8,17 @@ standalone.
 Internet
    │ :80 / :443
    ▼
-┌───────────────────────────┐
-│  rasphermes.home (192.168.1.100)   │
-│  ┌────────────┐  :80/:443  ┌──────────────┐
-│  │  Corvus    │──────────▶│  services     │
-│  │  (edge WAF │  forward  │  on other     │
-│  │  proxy)    │  by IP    │  VLANs        │
-│  └────────────┘           └──────────────┘
-│  ┌────────────┐  :53
-│  │  Pi-hole   │◀─── LAN DNS ─────────────┐
-│  └────────────┘                          │
-└───────────────────────────┘              │
+┌──────────────────────────────────────────────┐
+│       rasphermes.home (192.168.1.100)        │
+│  ┌────────────┐  :80/:443  ┌──────────────┐  │
+│  │  Corvus    │──────────▶│  services     │  │
+│  │  (edge WAF │  forward  │  on other     │  │
+│  │  proxy)    │  by IP    │  VLANs        │  │
+│  └────────────┘           └───────────────┘  │
+│  ┌────────────┐  :53                         │ 
+│  │  Pi-hole   │◀─── LAN DNS ─────────────┐   │
+│  └────────────┘                          │   │ 
+└──────────────────────────────────────────────┘
      :22  ansible bootstrap                ▼
                                           │ 192.168.x (VLANs via OpenWRT)
                                          TrueNAS / AI box / phones / TV
@@ -42,8 +40,11 @@ Internet
   Manager.
 - TLS in one place if you later add certs.
 
-**Why `ghcr.io/corvus-gateway/corvus:latest`?** Official image, Apache-2.0,
-single container. `ghcr.io` = GitHub Container Registry.
+**Image:** `ghcr.io/corvus-gateway/corvus:1.9.0` — pinned to the latest **stable**
+release. `ghcr.io` = GitHub Container Registry. We do **not** use `:latest`: a
+pin means a bad upgrade can't silently break your proxy, and you can see exactly
+what Ansible deploys. (There are `1.9.1-rc.1` release candidates, but RCs are
+untested — pin the stable line for now.)
 
 **Why Ansible manages the compose file, not the image?**
 Docker images move (tag `latest` changes). If Ansible tried to `docker pull`

@@ -12,7 +12,7 @@
 
 services:
   corvus:
-    image: 'ghcr.io/corvus-gateway/corvus:latest'
+    image: 'ghcr.io/corvus-gateway/corvus:1.9.0'
     restart: unless-stopped
     # Run as the container's built-in user (10001) — matches the image's setup.
     user: "10001:10001"
@@ -21,8 +21,12 @@ services:
       - "443:443"    # visitors -> gateway on HTTPS
       - "9443:9443"  # admin console (unencrypted; firewall: LAN only)
     environment:
-      # Names/IPs used to reach the admin console (and its cert, if ever enabled).
-      CORVUS_ADMIN_HOSTS: "{{ corvus_admin_hosts | default('rasphermes.home,192.168.1.100') }}"
+      # Names/IPs advertised to the admin console. Used ONLY if you later enable
+      # TLS on the console; for plain HTTP (now) it is ignored. When you DO enable
+      # HTTPS, set this to the PUBLIC address you'll reach the console at, e.g.:
+      #   CORVUS_ADMIN_HOSTS: corvus.rasphermes.home,corvus.duckdns.org
+      # Default is a placeholder — override in the play if you want a concrete value.
+      CORVUS_ADMIN_HOSTS: "{{ corvus_admin_hosts | default('corvus.rasphermes.home,corvus.duckdns.org') }}"
       # Forward-host DNS resolver. rasphermes runs Pi-hole on :53, so internal
       # names resolve there. Leave default (Docker's resolver) if unsure.
       CORVUS_RESOLVER: "127.0.0.1:53"

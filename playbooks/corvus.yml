@@ -26,8 +26,12 @@
     # We write the file here and mount it read-write, then tell docker to use it.
     CORVUS_COMPOSE_PATH: "/data/corvus/docker-compose.yml"
     CORVUS_DATA_DIR:    "/data/corvus"
-    # Public address advertised to the admin console (for its own cert, if enabled).
-    CORVUS_ADMIN_HOST:  "corvus.rasphermes.home"
+    # Names/IPs advertised to the Corvus admin console. Only used when the
+    # console has TLS enabled; ignored for plain HTTP (current phase). Set this
+    # to the PUBLIC address you'll reach the console at when you enable HTTPS,
+    # e.g. "corvus.rasphermes.home,corvus.duckdns.org". Leave unset to use the
+    # compose-file default.
+    corvus_admin_hosts: "corvus.rasphermes.home,corvus.duckdns.org"
 
   tasks:
     # ---------------------------------------------------------------------
