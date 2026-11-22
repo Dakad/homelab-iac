@@ -107,40 +107,22 @@ request time and does **not** append search domains. Use the **full name**
 
 ## Playbook order (dependency)
 
-The two plays are independent in code but ordered at run time. Corvus has a
-**prerequisite guard** task (task #0) that asserts the DuckDNS token file
-exists before it does anything. If the DuckDNS play hasn't run, Corvus stops
-loudly instead of deploying a proxy it can't manage.
-
-Run them in this order:
+Corvus depends on the DuckDNS play. Ansible has no native "play B is a
+prerequisite of play A" between separate files, so corvus.yml runs the duckdns
+playbook as an ordered task (task #0). Running corvus automatically runs
+duckdns first, then the guard task (task #1) verifies the token file exists.
 
 ```bash
-# 1. DuckDNS first — installs the updater, writes the cron, expects the token
-ansible rasphermes -i ./hosts -t duckdns \
-  --user dietpi --private-key=...
+# Just run corvus — it runs duckdns first, then checks the prerequisite
+ansible rasphermes -i ./hosts -t corvus --user dietpi --private-key=...
 
-# 2. Then Corvus — the prerequisite guard verifies #1 succeeded
-ansible rasphermes -i ./hosts -t corvus \
-  --user dietpi --private-key=...
+# Or run them in order manually
+ansible-playbook playbooks/duckdns.yml playbooks/corvus.yml
 ```
 
-You can run them in one shot too:
-
-```bash
-ansible rasphermes -i ./hosts -t duckdns,corvus \
-  --user dietpi --private-key=...
-```
-
-- The `duckdns` play installs `/usr/local/bin/duckdns_update.sh`, writes
-  `/etc/cron.d/duckdns`, and needs `/etc/duckdns/duckdns.env` (TOKEN +
-  SUBDOMAIN) present on the Pi.
-- The `corvus` play needs that env file to exist (its guard task checks it).
-
-**Tags, not `import_playbook`:** Ansible removed cross-playbook imports long
-ago, so "prerequisite" is expressed with tags + task ordering, not a formal
-dependency. The `duckdns` tag is also on the Corvus play (so `-t duckdns` alone
-won't re-run Corvus), and the guard task fails the Corvus play if DuckDNS is
-missing.
+- Task #0: runs the duckdns play **only if** `/etc/duckdns/duckdns.env` is
+  absent (skipped when already set up).
+- Task #1: guard — fails loudly if the token env file is missing.
 
 ## Re-running / upgrading
 

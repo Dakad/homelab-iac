@@ -47,7 +47,7 @@ fi
 # --- push the new IP to DuckDNS ----------------------------------------------
 # Endpoint = DuckDNS's documented update URL (from duckdns.org FAQ).
 # params: domains=<subdomain>, token=<token>, ip=<public IPv4>
-DUCKDNS_URL="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN}&token=${DUCKDNS_TOKEN}&ip="
+DUCKDNS_URL="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN}\&token=${DUCKDNS_TOKEN}\&ip="
 RESP="$(curl -s --max-time 10 -X POST "${DUCKDNS_URL}${IP}" | grep -o '"success":[a-z]*' | head -1)"
 
 if [[ "$RESP" == '"success":true' ]]; then

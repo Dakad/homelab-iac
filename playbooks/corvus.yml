@@ -23,7 +23,6 @@
     - corvus
     - edge
     - proxy
-    - duckdns   # prerequisite tag: the duckdns play must have run first (verify task below)
 
   vars:
     # Where the compose file + data live, INSIDE the container's data dir.
@@ -39,23 +38,41 @@
 
   tasks:
     # ---------------------------------------------------------------------
-    # 0. Prerequisite guard: the duckdns play must have run first. It installs
-    #    the updater and renders /etc/cron.d/duckdns; the token lives in
-    #    /etc/duckdns/duckdns.env. Without it, this play can't do its job and
-    #    should stop loudly instead of deploying a proxy that can't reach the
-    #    box it needs to manage.
+    # 0. PREREQUISITE: run the DuckDNS play first.
+    #
+    # Ansible has no native "play B is a prerequisite of play A", so we call
+    # the duckdns playbook as an ordered task here. This means running THIS
+    # play automatically runs the duckdns play first. The guard (task #1)
+    # then verifies the prerequisite actually completed.
+    #
+    # Also works the manual way:
+    #   ansible-playbook playbooks/duckdns.yml playbooks/corvus.yml
     # ---------------------------------------------------------------------
-    - name: Verify the DuckDNS prerequisite (token env file) is in place
+    - name: Run the DuckDNS prerequisite play first (only if not set up yet)
+      command:
+        cmd: >-
+          ansible-playbook playbooks/duckdns.yml
+        env:
+          ANSIBLE_CONFIG: "{{ playbook_dir }}/ansible.cfg"
+      tags:
+        - corvus
+      run_once: true
+      when:
+        - lookup("file", "/etc/duckdns/duckdns.env", errors="skip") is none
+
+    # ---------------------------------------------------------------------
+    # 1. Guard: fail loudly if the DuckDNS prerequisite didn't complete.
+    # ---------------------------------------------------------------------
+    - name: "Guard: verify the DuckDNS prerequisite (token env file) is in place"
       assert:
         that:
           - lookup("file", "/etc/duckdns/duckdns.env", errors="skip") is not none
         fail_msg: |
-          DuckDNS prerequisite not found.
+          DuckDNS prerequisite not found at /etc/duckdns/duckdns.env.
           Run the duckdns play first:
-            ansible rasphermes -i hosts -t duckdns \
-              --user dietpi --private-key=~/.ssh/ansible.id_ed25519
-          It installs the updater, writes /etc/cron.d/duckdns, and expects
-          /etc/duckdns/duckdns.env (TOKEN + SUBDOMAIN) on the Pi.
+            ansible-playbook playbooks/duckdns.yml
+          It installs the updater, writes /etc/cron.d/duckdns, and creates
+          /etc/duckdns/duckdns.env (TOKEN + SUBDOMAIN).
         success_msg: "DuckDNS prerequisite OK (/etc/duckdns/duckdns.env present)"
 
     # ---------------------------------------------------------------------
