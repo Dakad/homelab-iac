@@ -27,8 +27,7 @@
         key: "{{ lookup('file', './files/ansible.id_ed25519.pub') }}"
 
 - hosts: all
-  # become: true
-  # become_user: ansible
+  become: true   # root via dietpi passwordless sudo; 'ansible' user is not bootstrapped on current hosts
   tags: apt,pkg
   tasks:
     - name: Install htop
@@ -37,8 +36,7 @@
         state: latest
 
 - hosts: all
-  become: true
-  become_user: ansible
+  become: true   # root; do NOT become_user: ansible (user not present -> play fails)
   tags: always
   tasks:
     - name: Update cache & Upgrade all packages
@@ -51,3 +49,12 @@
     - name: Display the last line of the previous task to check the stats
       debug:
         msg:  "{{update_sys.stdout_lines|last}}"
+    - name: Check whether a reboot is required (e.g. kernel upgraded)
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+    - name: Reboot host when apt flagged a reboot (kernel CVE fix)
+      reboot:
+        msg: "Rebooting after apt dist-upgrade (kernel upgrade)"
+        reboot_timeout: 600
+      when: reboot_required.stat.exists
