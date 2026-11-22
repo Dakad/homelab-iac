@@ -1,0 +1,11 @@
+[rpi-clusters]
+rasphermes.home
+raspshiva.home
+
+
+#[laptops]
+#asus-rog-flow14.home
+
+
+[rpis:children]
+rpi-clusters

@@ -1,11 +1,18 @@
-[rpi-clusters]
-rasphermes.home
-raspshiva.home
+# Inventory — remapped 2026-11-06 (passive discovery; see docs/network-map.md)
+# Backup of previous inventory: hosts.bak-20261106
+# Names resolve via Pi-hole DNS on rasphermes.home:53. Use FQDNs for --limit.
 
+[rpi]
+rasphermes.home          # 192.168.1.100  Raspberry Pi e4:5f:01:c4:b8:52, DietPi + Pi-hole :53
 
-#[laptops]
-#asus-rog-flow14.home
+[laptops]
+asus-rog-flow14.home     # 192.168.87.85  ASUS ROG Flow 14 (Intel 60:dd:8e:c7:bb:b8)
 
+# Discovered but NOT yet targetable — key rpi_id_ed25519 not authorized on them yet:
+# rpi-control-10.local    # 192.168.0.210  Raspberry Pi e4:5f:01:c4:b8:ce — mDNS name (formerly raspshiva); not in .home DNS
+# raspshiva.home          # NXDOMAIN in Pi-hole as of 2026-11-06 (old alias of 192.168.0.210)
+# osmc-prentis 192.168.195.204  # Vero V (OSMC) — not a Pi, SSH rejects our key
 
-[rpis:children]
-rpi-clusters
+[homelab:children]
+rpi
+laptops
