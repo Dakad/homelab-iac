@@ -1,0 +1,20 @@
+# Dev tooling managed by mise (https://mise.jdx.dev)
+# Keeps the ansible dev environment reproducible: the tools below are
+# version-pinned here and installed on demand via `mise install`.
+
+[tools.yamllint]
+version = "1.36.2"
+
+[tools.ansible]
+version = "15.0.0"
+
+[tools.git]
+version = "2.47.0"
+
+[tasks.yaml]
+run = "yamllint ./*.yml"
+alias = "yaml"
+
+[tasks.lint]
+run = "yamllint ./*.yml"
+alias = "lint"
