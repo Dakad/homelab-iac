@@ -9,7 +9,7 @@
 # write it to that file yourself. See docs/edge-corvus.md for the API.
 # ============================================================================
 
-- hosts: rasphermes
+- hosts: rasphermes.home
   become: true
   gather_facts: true
   name: Install & schedule DuckDNS updater
