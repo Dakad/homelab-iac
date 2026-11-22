@@ -105,6 +105,43 @@ forward a domain:
 request time and does **not** append search domains. Use the **full name**
 (`service.duckdns.org`), not a short one (`service`), or you get 502.
 
+## Playbook order (dependency)
+
+The two plays are independent in code but ordered at run time. Corvus has a
+**prerequisite guard** task (task #0) that asserts the DuckDNS token file
+exists before it does anything. If the DuckDNS play hasn't run, Corvus stops
+loudly instead of deploying a proxy it can't manage.
+
+Run them in this order:
+
+```bash
+# 1. DuckDNS first — installs the updater, writes the cron, expects the token
+ansible rasphermes -i ./hosts -t duckdns \
+  --user dietpi --private-key=...
+
+# 2. Then Corvus — the prerequisite guard verifies #1 succeeded
+ansible rasphermes -i ./hosts -t corvus \
+  --user dietpi --private-key=...
+```
+
+You can run them in one shot too:
+
+```bash
+ansible rasphermes -i ./hosts -t duckdns,corvus \
+  --user dietpi --private-key=...
+```
+
+- The `duckdns` play installs `/usr/local/bin/duckdns_update.sh`, writes
+  `/etc/cron.d/duckdns`, and needs `/etc/duckdns/duckdns.env` (TOKEN +
+  SUBDOMAIN) present on the Pi.
+- The `corvus` play needs that env file to exist (its guard task checks it).
+
+**Tags, not `import_playbook`:** Ansible removed cross-playbook imports long
+ago, so "prerequisite" is expressed with tags + task ordering, not a formal
+dependency. The `duckdns` tag is also on the Corvus play (so `-t duckdns` alone
+won't re-run Corvus), and the guard task fails the Corvus play if DuckDNS is
+missing.
+
 ## Re-running / upgrading
 
 ```bash
