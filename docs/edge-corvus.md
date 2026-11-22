@@ -117,7 +117,7 @@ duckdns first, then the guard task (task #1) verifies the token file exists.
 ansible rasphermes -i ./hosts -t corvus --user dietpi --private-key=...
 
 # Or run them in order manually
-ansible-playbook playbooks/duckdns.yml playbooks/corvus.yml
+ansible-playbook playbooks/01-duckdns.yml playbooks/corvus.yml
 ```
 
 - Task #0: runs the duckdns play **only if** `/etc/duckdns/duckdns.env` is

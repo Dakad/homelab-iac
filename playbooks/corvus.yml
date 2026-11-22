@@ -46,12 +46,12 @@
     # then verifies the prerequisite actually completed.
     #
     # Also works the manual way:
-    #   ansible-playbook playbooks/duckdns.yml playbooks/corvus.yml
+    #   ansible-playbook playbooks/01-duckdns.yml playbooks/corvus.yml
     # ---------------------------------------------------------------------
     - name: Run the DuckDNS prerequisite play first (only if not set up yet)
       command:
         cmd: >-
-          ansible-playbook playbooks/duckdns.yml
+          ansible-playbook playbooks/01-duckdns.yml
         env:
           ANSIBLE_CONFIG: "{{ playbook_dir }}/ansible.cfg"
       tags:
@@ -70,7 +70,7 @@
         fail_msg: |
           DuckDNS prerequisite not found at /etc/duckdns/duckdns.env.
           Run the duckdns play first:
-            ansible-playbook playbooks/duckdns.yml
+            ansible-playbook playbooks/01-duckdns.yml
           It installs the updater, writes /etc/cron.d/duckdns, and creates
           /etc/duckdns/duckdns.env (TOKEN + SUBDOMAIN).
         success_msg: "DuckDNS prerequisite OK (/etc/duckdns/duckdns.env present)"
