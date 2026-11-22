@@ -1,0 +1,11 @@
+---
+- hosts: rpi
+  remote_user: dietpi   # User to log into to run the playbook tasks
+  become: true          # root via dietpi passwordless sudo; 'ansible' user is not bootstrapped on current hosts
+  vars:
+    NORMAL_USER_NAME: "ansible"
+  tasks:
+    - name: Install htop
+      package:
+        name: htop
+        state: latest

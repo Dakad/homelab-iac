@@ -13,7 +13,6 @@ yamllint = "1.36.2"
 ansible = "15.0.0"
 
 [tasks.yaml]
-alias = "yamllint"
 description = "Lint YAML files with yamllint"
 run = "yamllint ./*.yml"
 
@@ -24,3 +23,64 @@ run = "yamllint ./*.yml"
 [tasks.doctor]
 description = "Print the version of every mise-managed tool"
 run = "mise ls --json"
+
+[tasks."play:bootstrap"]
+description = "Run the bootstrap play (create user, sudo, authorized key) on the managed [rpi] group"
+# Runs playbooks/bootstrap.yml (hosts: rpi). The playbook is split into 3 files so
+# each task targets exactly one play — no tag filtering (the mise ansible-core
+# 2.22.0 build has a broken play-level tag filter). --limit rpi keeps the
+# experimental [laptops] out of the bootstrap.
+run = "ansible-playbook --limit rpi playbooks/bootstrap.yml"
+alias = "ansible:bootstrap"
+
+[tasks."play:bootstrap:local"]
+description = "Ensure the local ansible key exists (copy default or generate fresh) and sync the committed public key"
+run = "./.mise/tasks/play/bootstrap/local"
+alias = "ansible:bootstrap:local"
+
+[tasks."play:bootstrap:host"]
+description = "Bootstrap the host: create the ansible user (no password), sudo access, and install the local public key"
+run = "./.mise/tasks/play/bootstrap/host"
+alias = "ansible:bootstrap:host"
+
+[tasks."play:apt"]
+description = "Run the apt/pkg play (install/upgrade htop) on the managed [rpi] group"
+# Runs playbooks/maintenance.yml (hosts: rpi). The playbook is split into 3 files so
+# each task targets exactly one play — no tag filtering (the mise ansible-core
+# 2.22.0 build has a broken play-level tag filter). --limit rpi keeps the
+# experimental [laptops] out.
+run = "ansible-playbook --limit rpi playbooks/maintenance.yml"
+alias = "ansible:apt"
+
+[tasks."play:maintenance"]
+description = "Run the always play (apt update + dist-upgrade, reboot if needed) on the managed [rpi] group"
+# NOTE: --limit rpi (NOT --tags always). The mise ansible-core 2.22.0 build has
+# a broken play-level tag filter: --tags never filters plays. --limit rpi filters
+# HOSTS. To only touch the managed PIs (not the experimental laptops), add
+# --skip-tags bootstrap so the one-time user/key setup is not re-run.
+run = "ansible-playbook --limit rpi --skip-tags bootstrap playbook.yml"
+alias = "ansible:maintenance"
+
+[tasks."play:full"]
+description = "Run the full playbook (all plays)"
+run = "ansible-playbook common_playbook.yml"
+alias = "ansible:full"
+
+[tasks."play:facts"]
+description = "Gather facts about all hosts (ansible all -u ansible -m gather_facts)"
+run = "ansible all -u ansible -m gather_facts"
+alias = "ansible:facts"
+
+[tasks."play:shell"]
+description = "Run a shell command on a configurable host (e.g. uname -a)"
+usage = '''
+arg "<host>" help="Host to run the command on"
+arg "<command>" help="Command to run on the host"
+'''
+run = "ansible {{usage.host}} -u ansible -m shell -a \"{{usage.command | quote}}\""
+alias = "ansible:shell"
+
+[tasks."play:list-hosts"]
+description = "List ansible hosts without connecting"
+run = "ansible-playbook --list-hosts common_playbook.yml"
+alias = "ansible:list-hosts"

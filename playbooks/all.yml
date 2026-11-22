@@ -1,0 +1,8 @@
+---
+# Runs all three plays sequentially: bootstrap, maintenance, update.
+- name: "bootstrap.yml"
+  import_playbook: bootstrap.yml
+- name: "maintenance.yml"
+  import_playbook: maintenance.yml
+- name: "update.yml"
+  import_playbook: update.yml

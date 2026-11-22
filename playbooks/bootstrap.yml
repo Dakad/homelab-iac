@@ -1,0 +1,26 @@
+---
+- hosts: rpi
+  remote_user: dietpi   # User to log into to run the playbook tasks
+  become: true          # Needed to create the user and write sudoers on a fresh host
+  vars:
+    NORMAL_USER_NAME: "ansible"
+    # Install the controller's local public key (synced by play:bootstrap:local)
+    PUB_KEY_FILE: "{{ lookup('env', 'HOME') ~ '/.ssh/ansible.id_ed25519.pub' }}"
+  tasks:
+    - name: "Create a secondary, non-root user"
+      user:
+        name: "{{ NORMAL_USER_NAME }}"
+        group: root
+        shell: /bin/bash
+        # No password: key-only access. play:bootstrap:local generates/keeps the local key.
+    - name: "Add user ({{ NORMAL_USER_NAME }}) to sudoers"
+      lineinfile:
+        dest: /etc/sudoers
+        regexp: "{{ NORMAL_USER_NAME }} ALL"
+        line: "{{ NORMAL_USER_NAME }} ALL=(ALL) NOPASSWD:ALL"
+        state: present
+
+    - name: "Install the controller's public key for user ({{ NORMAL_USER_NAME }})"
+      authorized_key:
+        user: "{{ NORMAL_USER_NAME }}"
+        key: "{{ lookup('file', PUB_KEY_FILE) }}"
