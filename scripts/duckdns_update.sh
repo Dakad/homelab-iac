@@ -1,19 +1,17 @@
 #!/bin/bash
 # duckdns_update.sh — update a DuckDNS A record with the host's current public IPv4.
 #
-# Parameterised entirely via the environment, so the SAME script can run on any
-# host. Each box sets its own DUCKDNS_SUBDOMAIN (and DUCKDNS_TOKEN). The token is
-# a secret: keep it in a local env file on the target (e.g. /etc/duckdns/duckdns.env),
-# never commit it to this repo.
+# This is the exact approach DuckDNS's own FAQ uses (the /update one-liner),
+# parameterised so the SAME script works on any box. Each box sets its own
+# DUCKDNS_SUBDOMAIN and DUCKDNS_TOKEN. The token is a secret: keep it in a local
+# env file on the Pi, never in this repo.
 #
 # Cron (hourly):
 #   0 * * * * /usr/local/bin/duckdns_update.sh >> /var/log/duckdns_update.log 2>&1
 set -euo pipefail
 
-DUCKDNS_API="https://duckdns.org/api"
 STATE_FILE="${DUCKDNS_STATE_FILE:-/var/lib/duckdns/.last-ip}"
 LOG_FILE="${DUCKDNS_LOG_FILE:-/var/log/duckdns_update.log}"
-PID_FILE="${DUCKDNS_PID_FILE:-/run/duckdns_update.pid}"
 
 # Load token/subdomain from a local env file if present.
 if [[ -f /etc/duckdns/duckdns.env ]]; then
@@ -31,7 +29,7 @@ if [[ -z "${DUCKDNS_TOKEN:-}" || -z "${DUCKDNS_SUBDOMAIN:-}" ]]; then
 fi
 
 # --- detect public IPv4 -------------------------------------------------------
-IP="$(curl -s --max-time 8 https://ipv4.icanhazip.com)"
+IP="$(curl -s --max-time 8 http://ipecho.net/plain)"
 if [[ -z "$IP" || "$IP" == "0.0.0.0" ]]; then
   log "ERROR: could not detect a public IPv4 address"
   exit 1
@@ -47,9 +45,12 @@ if [[ -f "$STATE_FILE" ]]; then
 fi
 
 # --- push the new IP to DuckDNS ----------------------------------------------
-RESP="$(curl -s --max-time 10 -X POST "${DUCKDNS_API}/query?subdomain=${DUCKDNS_SUBDOMAIN}&token=${DUCKDNS_TOKEN}")"
+# Endpoint = DuckDNS's documented update URL (from duckdns.org FAQ).
+# params: domains=<subdomain>, token=<token>, ip=<public IPv4>
+DUCKDNS_URL="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN}&token=${DUCKDNS_TOKEN}&ip="
+RESP="$(curl -s --max-time 10 -X POST "${DUCKDNS_URL}${IP}" | grep -o '"success":[a-z]*' | head -1)"
 
-if printf '%s' "$RESP" | grep -qi 'success'; then
+if [[ "$RESP" == '"success":true' ]]; then
   printf '%s\n' "$IP" > "$STATE_FILE"
   log "OK: ${DUCKDNS_SUBDOMAIN} -> ${IP}   resp=${RESP}"
 else

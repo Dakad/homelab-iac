@@ -1,0 +1,8 @@
+# Managed by Ansible — do not edit by hand.
+# DuckDNS A-record refresh: runs once per hour at minute 0.
+# The script logs to /var/log/duckdns_update.log and skips the API call when
+# the IP hasn't changed. See docs/edge-corvus.md.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=dietpi
+0 * * * * /usr/local/bin/duckdns_update.sh >> /var/log/duckdns_update.log 2>&1

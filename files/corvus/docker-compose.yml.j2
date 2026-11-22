@@ -26,7 +26,7 @@ services:
       # HTTPS, set this to the PUBLIC address you'll reach the console at, e.g.:
       #   CORVUS_ADMIN_HOSTS: corvus.rasphermes.home,corvus.duckdns.org
       # Default is a placeholder — override in the play if you want a concrete value.
-      CORVUS_ADMIN_HOSTS: "{{ corvus_admin_hosts | default('corvus.rasphermes.home,corvus.duckdns.org') }}"
+      CORVUS_ADMIN_HOSTS: "{{ corvus_admin_hosts | default('corvus.rasphermes.home,corvus.rasphermes.duckdns.org') }}"
       # Forward-host DNS resolver. rasphermes runs Pi-hole on :53, so internal
       # names resolve there. Leave default (Docker's resolver) if unsure.
       CORVUS_RESOLVER: "127.0.0.1:53"

@@ -6,6 +6,9 @@
 # Ansible should manage the *declarative* bits (the compose file + the
 # persistent data volume) and let Docker pull/upgrade the image itself.
 #
+# We bring the service up with a plain `docker compose` command (no Ansible
+# docker collection needed — keeps it simple).
+#
 # Role in the network: rasphermes is the entrypoint + exitpoint. Corvus sits
 # on ports 80/443 and forwards to your services (by private IP) which may live
 # on other VLANs. It is plain HTTP forwarding for now — no Let's Encrypt, so
@@ -35,7 +38,7 @@
 
   tasks:
     # ---------------------------------------------------------------------
-    # 1. Persistent data volume. The container runs as uid 10001, so chown it.
+    # 1. Persistent data volume. The container runs as uid/gid 10001, so chown it.
     #    We only create the dir + ownership — we never touch the image.
     # ---------------------------------------------------------------------
     - name: Ensure the Corvus data directory exists (owned by the container user)
@@ -61,15 +64,14 @@
 
     # ---------------------------------------------------------------------
     # 3. Bring the service (re)up using the compose file we just wrote.
-    #    docker compose is the single interface we use, so upgrades just happen
-    #    when the image changes and someone runs this play again.
+    #    `docker compose up -d` re-applies the compose file, so an upgrade just
+    #    happens when the image changes and someone runs this play again.
     # ---------------------------------------------------------------------
     - name: (Re)start Corvus with the updated compose file
-      docker_compose:
-        project_path: "{{ CORVUS_DATA_DIR }}"
-        command: restart
-        state: started
-        force_restart: false
+      command:
+        cmd: "docker compose -f {{ CORVUS_COMPOSE_PATH }} up -d"
+      register: corvus_up
+      changed_when: true
 
     # ---------------------------------------------------------------------
     # 4. Sanity check: is Corvus answering on the admin console port (9443)?
@@ -79,5 +81,5 @@
         host: 127.0.0.1
         port: 9443
         timeout: 120
-      register: corvus_up
-      until: corvus_up is succeeded
+      register: corvus_up_check
+      until: corvus_up_check is succeeded
