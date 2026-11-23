@@ -53,12 +53,11 @@ run = "ansible-playbook --limit rpi playbooks/maintenance.yml"
 alias = "ansible:apt"
 
 [tasks."play:maintenance"]
-description = "Run the always play (apt update + dist-upgrade, reboot if needed) on the managed [rpi] group"
-# NOTE: --limit rpi (NOT --tags always). The mise ansible-core 2.22.0 build has
-# a broken play-level tag filter: --tags never filters plays. --limit rpi filters
-# HOSTS. To only touch the managed PIs (not the experimental laptops), add
-# --skip-tags bootstrap so the one-time user/key setup is not re-run.
-run = "ansible-playbook --limit rpi --skip-tags bootstrap playbook.yml"
+description = "Run the apt update + dist-upgrade (reboot if needed) on the managed [rpi] group"
+# NOTE: --limit rpi (NOT --tags always). The mise ansible-core 2.22.0 build has a
+# broken play-level tag filter: --tags never filters plays. --limit rpi filters HOSTS.
+# --skip-tags bootstrap skips the one-time user/key setup so it isn't re-run.
+run = "ansible-playbook --limit rpi --skip-tags bootstrap playbooks/update.yml"
 alias = "ansible:maintenance"
 
 [tasks."play:full"]

@@ -14,7 +14,11 @@
         autoclean: true
     - name: Display the last line of the previous task to check the stats
       debug:
-        msg:  "{{update_sys.stdout_lines|last}}"
+        msg: "{{update_sys.stdout_lines|last}}"
+    - name: Install htop (merged from maintenance.yml)
+      package:
+        name: htop
+        state: latest
     - name: Check whether a reboot is required (e.g. kernel upgraded)
       stat:
         path: /var/run/reboot-required
