@@ -6,7 +6,7 @@ Minimal Ansible repo provisioning the homelab: a single managed Pi (`rasphermes`
 - Inventory: `hosts`; private key: `$HOME/.ssh/ansible.id_ed25519`; public key pushed to hosts: `files/ansible.id_ed25519.pub`. `ansible.cfg` shortcuts these (`ansible.cfg`).
 - Run: `ansible-playbook common_playbook.yml --user dietpi --private-key=$HOME/.ssh/ansible.id_ed25519 -i ./hosts`
 - Host list / facts: `ansible all --list-hosts`; `ansible all -u ansible -m gather_facts` (pipe to `less`).
-- Ad-hoc run (with sudo): `ansible rasphermes -u ansible -m shell -a "uname -a"`; `ansible rasphermes -u ansible -m apt -a "upgrade=dist" --become --ask-become-pass`.
+- Ad-hoc run: prefer the mise task `mise run ansible:shell <host> "<command>"`, which expands to `ansible <host> -u ansible -m shell -a "<command>"`. Both the host and the command are configurable (usage-spec, see `.mise.toml`). Raw ad-hoc: `ansible rasphermes -u ansible -m shell -a "uname -a"`; `ansible rasphermes -u ansible -m apt -a "upgrade=dist" --become --ask-become-pass`.
 
 ## Playbook acts (common_playbook.yml)
 1. **bootstrap** (tag `bootstrap`): create user `ansible` (**password hash is hardcoded at line 13** — only runs once, no `changelog` guard, and it's committed to git; re-running rewrites it and locks anyone with a manual shell password), adds it to sudoers, grafts `files/*.pub` into authorized_keys.

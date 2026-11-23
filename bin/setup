@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# bin/setup — first-run environment setup for this repo.
+#
+# PRECONDITION: `mise` must already be installed on the machine.
+#   This script never installs mise itself; it only relies on a mise
+#   binary being available on PATH. If you don't have mise yet, install it
+#   first, e.g.:
+#       brew install mise
+#       # or from source: https://mise.jdx.dev/installing-mise.html
+#
+# What this does:
+#   1. verify mise is on PATH
+#   2. trust the project mise config (.mise.toml)
+#   3. install the tools pinned in .mise.toml (mise install)
+#   4. regenerate the lockfile (mise.lock), only reporting when it changes
+#
+set -euo pipefail
+
+# Resolve the repo root so this works from any subdirectory.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+mise_bin="$(command -v mise)"
+if [[ -z "$mise_bin" ]]; then
+  echo "ERROR: mise is not installed or not on PATH." >&2
+  echo "Install it first, then re-run this script:" >&2
+  echo "  brew install mise" >&2
+  exit 1
+fi
+
+mise_version="$(mise --version | awk '{print $2}')"
+echo "==> using mise ${mise_version} (${mise_bin})"
+
+lockfile="mise.lock"
+
+# Checksum helper: prints "-" when the file is missing/unreadable.
+checksum() { md5 -q "$1" 2>/dev/null || echo "-"; }
+
+echo "==> trusting .mise.toml"
+mise trust .mise.toml >/dev/null
+
+echo "==> installing tools from .mise.toml"
+# Note: `mise install` runs without --locked so it can add newly-pinned
+# tools (e.g. a fresh python interpreter). `mise lock` below regenerates
+# the lockfile.
+mise install
+
+echo "==> lockfile"
+before="$(checksum "$lockfile")"
+mise lock >/dev/null
+after="$(checksum "$lockfile")"
+if [[ "$before" == "$after" ]]; then
+  echo "    lockfile already up to date"
+else
+  echo "    lockfile regenerated"
+fi
+
+echo "==> done"

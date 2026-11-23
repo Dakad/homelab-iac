@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#MISE description="Ensure the local ansible key exists (copy default or generate fresh) and sync the committed public key"
+set -euo pipefail
+
+ssh_dir="$HOME/.ssh"
+key="$ssh_dir/ansible.id_ed25519"
+pub_local="$ssh_dir/ansible.id_ed25519.pub"
+pub_repo="files/ansible.id_ed25519.pub"
+
+install -d -m 700 "$ssh_dir"
+
+if [ ! -f "$key" ]; then
+  echo "[bootstrap:local] private key missing — generating fresh keypair"
+  ssh-keygen -t ed25519 -N '' -C "Homelab Ansible" -f "$key"
+else
+  echo "[bootstrap:local] private key present — using existing key"
+fi
+
+if [ ! -f "$pub_local" ] && [ -f "$pub_repo" ]; then
+  cp "$pub_repo" "$pub_local"
+fi
+
+new_pub="$(ssh-keygen -yf "$key")"
+if [ "$(cat "$pub_repo" 2>/dev/null || true)" != "$new_pub" ]; then
+  echo "[bootstrap:local] syncing committed public key to match local private key"
+  printf '%s\n' "$new_pub" > "$pub_repo"
+fi
+
+echo "[bootstrap:local] done — fingerprint: $(ssh-keygen -lf "$key" | awk '{print $1" "$2}')"
+echo "[bootstrap:local] next: run 'mise run play:bootstrap:host' to sync the public key onto the hosts"
