@@ -2,30 +2,27 @@
 
 Little repo to host ansible config about my homelab's rapberry-pi clusters and laptop
 
-## Before start
+## Setup & Usage
 
-All targets host must have the ansible SSH keys to allow Ansible to easily connect without password 
-To generate the SSH keys (this has to be done only once, if the file already exists, retrieve it):
+This project uses `mise` to manage the environment and `bin/setup` for initial configuration.
 
-``` bash
-ssh-keygen -t ed25519 -C "Homelab Ansible" -f $HOME/.ssh/ansible.id_ed25519
+### Initial Setup
+
+Run the setup script to install required tools and configure the local environment:
+
+```bash
+./bin/setup
 ```
 
-Now, we need to send the ssh to the target hosts using ``ssh-copy-id``, repeat the command for every host:
-For instance
+### Running Playbooks
 
-``` bash
-# Dietpi will be used as become user (user of reference if needed intead of root)
-ssh-copy-id -p 22 -i ~/.ssh/ansible.id_ed25519 dietpi@rasphermes
+Use `mise` to run the defined tasks (e.g., bootstrap, maintenance, etc.):
+
+```bash
+# Examples:
+mise run ansible:bootstrap
+mise run ansible:maintenance
+mise run ansible:shell rasphermes "uptime"
 ```
 
-To  run the playbook, use the following command:
-
-``` bash
-ansible-playbook common_playbook.yml --u dietpi  --private-key=$HOME/.ssh/ansible.id_ed25519 -i ./hosts
-```
-
-## Docs
-
-THere is folder `docs` with all necessary information and usefull commands to use
-
+See the `docs` folder for more information and common commands.
