@@ -1,7 +1,7 @@
 ---
-- hosts: rpi
-  remote_user: dietpi   # User to log into to run the playbook tasks
-  become: true          # root; do NOT become_user: ansible (user not present -> play fails)
+- hosts: rpis
+  remote_user: dietpi # User to log into to run the playbook tasks
+  become: true # root; do NOT become_user: ansible (user not present -> play fails)
   vars:
     NORMAL_USER_NAME: "ansible"
   tasks:

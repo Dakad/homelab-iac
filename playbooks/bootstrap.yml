@@ -1,7 +1,7 @@
 ---
-- hosts: rpi
-  remote_user: dietpi   # User to log into to run the playbook tasks
-  become: true          # Needed to create the user and write sudoers on a fresh host
+- hosts: rpis
+  remote_user: dietpi # User to log into to run the playbook tasks
+  become: true # Needed to create the user and write sudoers on a fresh host
   vars:
     NORMAL_USER_NAME: "ansible"
     # Install the controller's local public key (synced by play:bootstrap:local)

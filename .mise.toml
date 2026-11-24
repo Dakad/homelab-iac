@@ -12,6 +12,10 @@ python = "3.15.2"
 yamllint = "1.36.2"
 ansible = "15.0.0"
 
+[env]
+ANSIBLE_CONFIG = "./ansible.cfg"
+
+
 [tasks.yaml]
 description = "Lint YAML files with yamllint"
 run = "yamllint ./*.yml"
@@ -26,11 +30,11 @@ run = "mise ls --json"
 
 [tasks."play:bootstrap"]
 description = "Run the bootstrap play (create user, sudo, authorized key) on the managed [rpi] group"
-# Runs playbooks/bootstrap.yml (hosts: rpi). The playbook is split into 3 files so
+# Runs playbooks/bootstrap.yml (hosts: rpis). The playbook is split into 3 files so
 # each task targets exactly one play — no tag filtering (the mise ansible-core
-# 2.22.0 build has a broken play-level tag filter). --limit rpi keeps the
+# 2.22.0 build has a broken play-level tag filter). --limit rpis keeps the
 # experimental [laptops] out of the bootstrap.
-run = "ansible-playbook --limit rpi playbooks/bootstrap.yml"
+run = "ansible-playbook --limit rpis playbooks/bootstrap.yml"
 alias = "ansible:bootstrap"
 
 [tasks."play:bootstrap:local"]
@@ -45,24 +49,24 @@ alias = "ansible:bootstrap:host"
 
 [tasks."play:apt"]
 description = "Run the apt/pkg play (install/upgrade htop) on the managed [rpi] group"
-# Runs playbooks/maintenance.yml (hosts: rpi). The playbook is split into 3 files so
+# Runs playbooks/update.yml (hosts: rpis). The playbook is split into 3 files so
 # each task targets exactly one play — no tag filtering (the mise ansible-core
-# 2.22.0 build has a broken play-level tag filter). --limit rpi keeps the
+# 2.22.0 build has a broken play-level tag filter). --limit rpis keeps the
 # experimental [laptops] out.
-run = "ansible-playbook --limit rpi playbooks/maintenance.yml"
+run = "ansible-playbook --limit rpis playbooks/update.yml"
 alias = "ansible:apt"
 
-[tasks."play:maintenance"]
+[tasks."play:update"]
 description = "Run the apt update + dist-upgrade (reboot if needed) on the managed [rpi] group"
-# NOTE: --limit rpi (NOT --tags always). The mise ansible-core 2.22.0 build has a
-# broken play-level tag filter: --tags never filters plays. --limit rpi filters HOSTS.
+# NOTE: --limit rpis (NOT --tags always). The mise ansible-core 2.22.0 build has a
+# broken play-level tag filter: --tags never filters plays. --limit rpis filters HOSTS.
 # --skip-tags bootstrap skips the one-time user/key setup so it isn't re-run.
-run = "ansible-playbook --limit rpi --skip-tags bootstrap playbooks/update.yml"
-alias = "ansible:maintenance"
+run = "ansible-playbook --limit rpis --skip-tags bootstrap playbooks/update.yml"
+alias = "ansible:update"
 
 [tasks."play:full"]
 description = "Run the full playbook (all plays)"
-run = "ansible-playbook common_playbook.yml"
+run = "ansible-playbook playbooks/update.yml"
 alias = "ansible:full"
 
 [tasks."play:facts"]
@@ -81,5 +85,5 @@ alias = "ansible:shell"
 
 [tasks."play:list-hosts"]
 description = "List ansible hosts without connecting"
-run = "ansible-playbook --list-hosts common_playbook.yml"
+run = "ansible-playbook --list-hosts playbooks/update.yml"
 alias = "ansible:list-hosts"

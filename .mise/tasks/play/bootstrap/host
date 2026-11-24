@@ -2,9 +2,9 @@
 #MISE description="Bootstrap the host: create the ansible user (no password), sudo access, and install the local public key"
 set -euo pipefail
 
-# NOTE: use --limit rpi, NOT --tags bootstrap.
+# NOTE: use --limit rpis, NOT --tags bootstrap.
 # The mise-managed ansible-core 2.22.0 build has a broken play-level tag filter:
 # `--tags bootstrap` parses fine but never filters plays, so it runs every play
-# and fails on the experimental laptops. `--limit rpi` filters HOSTS, and since
+# and fails on the experimental laptops. `--limit rpis` filters HOSTS, and since
 # the bootstrap play is the only one targeting the [rpi] group, it isolates it.
-ansible-playbook --limit rpi --tags bootstrap playbooks/bootstrap.yml
+ansible-playbook --limit rpis --tags bootstrap playbooks/bootstrap.yml
