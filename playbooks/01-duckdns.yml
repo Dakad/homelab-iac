@@ -1,0 +1,84 @@
+---
+# ============================================================================
+# DuckDNS dynamic DNS updater on rasphermes.
+#
+# Installs the updater script, renders a cron.d entry (hourly), and prepares
+# the env directory. The DuckDNS TOKEN is a secret: it lives in a LOCAL file
+# on the Pi (/etc/duckdns/duckdns.env) and is NEVER created by this playbook
+# nor committed to git. Register the DuckDNS account once, grab the token, and
+# write it to that file yourself. See docs/edge-corvus.md for the API.
+# ============================================================================
+
+- hosts: rasphermes.home
+  become: true
+  gather_facts: true
+  name: Install & schedule DuckDNS updater
+
+  vars:
+    # Where the updater script lives (must be on PATH so cron can find it).
+    DUCKDNS_BIN: "/usr/local/bin/duckdns_update.sh"
+    # Where the per-box token/subdomain env file lives (local secret, not git).
+    DUCKDNS_ENV_DIR: "/etc/duckdns"
+    DUCKDNS_ENV_FILE: "/etc/duckdns/duckdns.env"
+    # Where the cron.d file and its log go.
+    DUCKDNS_CRON_FILE: "/etc/cron.d/duckdns"
+    DUCKDNS_LOG_FILE: "/var/log/duckdns_update.log"
+
+  tasks:
+    # ---------------------------------------------------------------------
+    # 1. Put the updater script on the system PATH.
+    # ---------------------------------------------------------------------
+    - name: Install the DuckDNS updater script to /usr/local/bin
+      copy:
+        src: scripts/duckdns_update.sh
+        dest: "{{ DUCKDNS_BIN }}"
+        owner: root
+        group: root
+        mode: "0755"
+
+    # ---------------------------------------------------------------------
+    # 2. Prepare the env dir. The token file is written locally by the user;
+    #    we only ensure the dir exists here. If the file is absent, the script
+    #    errors out cleanly (and the cron logs the failure) — it never runs
+    #    without a token.
+    # ---------------------------------------------------------------------
+    - name: Ensure the DuckDNS env directory exists
+      file:
+        path: "{{ DUCKDNS_ENV_DIR }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Warn if the token env file is missing
+      assert:
+        that:
+          - lookup("file", "{{ DUCKDNS_ENV_FILE }}", errors="skip") is not none
+        fail_msg: |
+          DuckDNS token not found at {{ DUCKDNS_ENV_FILE }}.
+          Register your DuckDNS account, then create that file with:
+            DUCKDNS_TOKEN=<your-token>
+            DUCKDNS_SUBDOMAIN=<your-subdomain>
+          (source: docs/edge-corvus.md, "DuckDNS API" section.)
+        success_msg: "DuckDNS token env file present"
+
+    # ---------------------------------------------------------------------
+    # 3. Render the cron.d entry (idempotent — overwrites if present).
+    #    cron.d files run as root and are the Debian-native way to schedule
+    #    jobs; no user crontab duplication.
+    # ---------------------------------------------------------------------
+    - name: Render the DuckDNS cron.d entry
+      copy:
+        src: cron/duckdns.cron.j2
+        dest: "{{ DUCKDNS_CRON_FILE }}"
+        owner: root
+        group: root
+        mode: "0644"
+
+    # ---------------------------------------------------------------------
+    # 4. Make cron pick up the new file.
+    # ---------------------------------------------------------------------
+    - name: Reload cron daemon
+      cron:
+        reload: true
+      # 'reload: true' without a specific task just re-reads /etc/cron.d
